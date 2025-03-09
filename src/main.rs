@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 
 fn get_cache_dir() -> Result<PathBuf> {
     let home = env::var("HOME").map_err(|_| anyhow!("HOME environment variable not set"))?;
-    Ok(PathBuf::from(home).join(".cache").join("livecam"))
+    Ok(PathBuf::from(home).join(".cache").join("citycam"))
 }
 
 fn get_current_stream_url() -> Result<String> {
