@@ -1,0 +1,12 @@
+services:
+  citycam:
+    build:
+      context: .
+      dockerfile: dockerfile
+    volumes:
+      - ./target/release:/app/target/release  # This exposes binaries to host
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XDG_RUNTIME_DIR=/tmp
+    restart: unless-stopped
