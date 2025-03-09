@@ -11,10 +11,8 @@ use std::fs;
 
 fn main() -> Result<()> {
     let args = cli::Args::parse();
-
     let cache_dir = utils::get_cache_dir()?;
     fs::create_dir_all(&cache_dir)?;
-
     let original_image = stream::get_first_frame()?;
     let filename = Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
     let output_path = cache_dir.join(filename);
@@ -22,14 +20,14 @@ fn main() -> Result<()> {
     let mut processed_image = original_image.clone();
 
     if args.grayscale {
-        let gray_image = image::imageops::grayscale(&original_image);
+        let gray_image = image::imageops::grayscale(&processed_image);
         processed_image = image_processing::convert_grayscale_to_rgb(&gray_image);
     }
 
     if args.color_sky {
         let sky_color = sky_detection::get_sky_color_for_time();
-        let gray_image = image::imageops::grayscale(&original_image);
-        let sky_mask = sky_detection::detect_sky_region_growing(&gray_image);
+        let gray_for_sky = image::imageops::grayscale(&processed_image);
+        let sky_mask = sky_detection::detect_sky_region_growing(&gray_for_sky);
         processed_image =
             sky_detection::apply_sky_color_with_gradient(&processed_image, &sky_mask, sky_color);
     }
@@ -37,41 +35,19 @@ fn main() -> Result<()> {
     if let Some(noise_type) = args.noise {
         match noise_type {
             cli::NoiseType::Gaussian => {
-                if args.grayscale {
-                    let gray_image = image::imageops::grayscale(&original_image);
-                    processed_image = image_processing::add_gaussian_noise(
-                        &gray_image,
-                        0.0,
-                        args.noise_intensity,
-                    );
-                } else {
-                    processed_image = image_processing::add_gaussian_noise_to_rgb(
-                        &processed_image,
-                        0.0,
-                        args.noise_intensity,
-                    );
-                }
+                processed_image = image_processing::add_gaussian_noise_to_rgb(
+                    &processed_image,
+                    0.0,
+                    args.noise_intensity,
+                );
             }
             cli::NoiseType::SaltPepper => {
-                let density = args.noise_intensity / 255.0; // Convert to 0-1 range
-                if args.grayscale {
-                    let gray_image = image::imageops::grayscale(&original_image);
-                    processed_image =
-                        image_processing::add_salt_and_pepper_noise(&gray_image, density);
-                } else {
-                    processed_image = image_processing::add_salt_and_pepper_noise_to_rgb(
-                        &processed_image,
-                        density,
-                    );
-                }
+                let density = args.noise_intensity / 255.0;
+                processed_image =
+                    image_processing::add_salt_and_pepper_noise_to_rgb(&processed_image, density);
             }
             cli::NoiseType::Poisson => {
-                if args.grayscale {
-                    let gray_image = image::imageops::grayscale(&original_image);
-                    processed_image = image_processing::add_poisson_noise(&gray_image);
-                } else {
-                    processed_image = image_processing::add_poisson_noise_to_rgb(&processed_image);
-                }
+                processed_image = image_processing::add_poisson_noise_to_rgb(&processed_image);
             }
         }
     }
