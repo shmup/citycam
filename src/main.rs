@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use chrono::Local;
-use image::{GrayImage, ImageBuffer, Rgb, RgbImage};
+use image::{GrayImage, Rgb, RgbImage};
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use regex::Regex;
