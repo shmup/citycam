@@ -17,6 +17,7 @@ imageproc = "0.23.0"
 tempfile = "3.18.0"
 ffmpeg-next = "7.1.0"
 wallpaper = "3"
+clap = { version = "4.5.31", features = ["derive"] }
 
 [profile.release]
 opt-level = "z"     # Optimize for size
