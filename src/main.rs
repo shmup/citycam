@@ -29,7 +29,7 @@ fn main() -> Result<()> {
 fn get_cache_dir() -> Result<PathBuf> {
     let cache_dir = dirs::cache_dir()
         .ok_or_else(|| anyhow!("Could not determine cache directory"))?
-        .join("citycam");
+        .join(env!("CARGO_PKG_NAME"));
     Ok(cache_dir)
 }
 
