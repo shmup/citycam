@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Result};
 use chrono::Local;
 use image::{GrayImage, Rgb, RgbImage};
-use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use regex::Regex;
 use std::path::{Path, PathBuf};
@@ -10,25 +9,18 @@ use std::{env, fs};
 use tempfile::NamedTempFile;
 
 fn main() -> Result<()> {
-    // Create cache directory
     let cache_dir = get_cache_dir()?;
     fs::create_dir_all(&cache_dir)?;
 
-    // Get first frame from stream
     let image = get_first_frame()?;
 
-    // Create filename with timestamp
     let filename = Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
     let output_path = cache_dir.join(filename);
 
-    // Convert to grayscale and add noise
     let gray_image = image::imageops::grayscale(&image);
     let noisy_image = add_gaussian_noise(&gray_image, 0.0, 35.0);
 
-    // Save the image
     noisy_image.save(&output_path)?;
-
-    // Set as wallpaper
     set_wallpaper(&output_path)?;
 
     Ok(())
@@ -56,11 +48,8 @@ fn get_current_stream_url() -> Result<String> {
 
 fn get_first_frame() -> Result<RgbImage> {
     let m3u8_url = get_current_stream_url()?;
-
-    // Get master playlist
     let response = reqwest::blocking::get(&m3u8_url)?.text()?;
 
-    // Find chunks playlist
     let base_url = m3u8_url
         .rsplit_once('/')
         .map(|(base, _)| base)
@@ -74,11 +63,7 @@ fn get_first_frame() -> Result<RgbImage> {
         .ok_or_else(|| anyhow!("No chunks playlist found"))?;
 
     let chunks_playlist_url = format!("{}{}", base_url, chunks_playlist);
-
-    // Get chunks playlist
     let chunks_response = reqwest::blocking::get(&chunks_playlist_url)?.text()?;
-
-    // Find first segment
     let chunks_base_url = chunks_playlist_url
         .rsplit_once('/')
         .map(|(base, _)| base)
@@ -92,11 +77,8 @@ fn get_first_frame() -> Result<RgbImage> {
         .ok_or_else(|| anyhow!("No video segments found"))?;
 
     let segment_url = format!("{}{}", chunks_base_url, segment);
-
-    // Download segment
     let segment_data = reqwest::blocking::get(&segment_url)?.bytes()?;
 
-    // Save to temporary file
     let mut temp_file = NamedTempFile::new()?;
     std::io::copy(&mut segment_data.as_ref(), &mut temp_file)?;
 
@@ -122,12 +104,10 @@ fn get_first_frame() -> Result<RgbImage> {
         ));
     }
 
-    // Check if the file exists and has content
     if fs::metadata(output_path_str)?.len() == 0 {
         return Err(anyhow!("FFmpeg produced an empty output file"));
     }
 
-    // Load the image
     let img = image::open(output_path_str)?.to_rgb8();
 
     Ok(img)
@@ -138,7 +118,7 @@ fn add_gaussian_noise(img: &GrayImage, mean: f64, std_dev: f64) -> RgbImage {
     let height = img.height();
 
     let normal = Normal::new(mean, std_dev).unwrap();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let mut noisy_img = RgbImage::new(width, height);
 
