@@ -8,7 +8,6 @@ use regex::Regex;
 use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 fn main() -> Result<()> {
     let cache_dir = get_cache_dir()?;
@@ -171,9 +170,8 @@ fn add_gaussian_noise(img: &GrayImage, mean: f64, std_dev: f64) -> RgbImage {
 }
 
 fn set_wallpaper(path: &Path) -> Result<()> {
-    Command::new("feh")
-        .args(&["--bg-scale", path.to_str().unwrap()])
-        .output()?;
+    wallpaper::set_from_path(path.to_str().unwrap())
+        .map_err(|e| anyhow!("Failed to set wallpaper: {}", e))?;
 
     Ok(())
 }
