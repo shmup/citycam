@@ -100,23 +100,36 @@ fn get_first_frame() -> Result<RgbImage> {
     let mut temp_file = NamedTempFile::new()?;
     std::io::copy(&mut segment_data.as_ref(), &mut temp_file)?;
 
-    // Extract first frame using ffmpeg
-    let output_file = NamedTempFile::new()?;
-    let output_path = output_file.path().to_str().unwrap();
+    let temp_dir = tempfile::tempdir()?;
+    let output_path = temp_dir.path().join("frame.jpg");
+    let output_path_str = output_path.to_str().unwrap();
 
-    Command::new("ffmpeg")
+    let ffmpeg_output = Command::new("ffmpeg")
         .args(&[
             "-i",
             temp_file.path().to_str().unwrap(),
             "-vframes",
             "1",
             "-y",
-            output_path,
+            output_path_str,
         ])
         .output()?;
 
+    if !ffmpeg_output.status.success() {
+        return Err(anyhow!(
+            "FFmpeg failed: {}",
+            String::from_utf8_lossy(&ffmpeg_output.stderr)
+        ));
+    }
+
+    // Check if the file exists and has content
+    if fs::metadata(output_path_str)?.len() == 0 {
+        return Err(anyhow!("FFmpeg produced an empty output file"));
+    }
+
     // Load the image
-    let img = image::open(output_path)?.to_rgb8();
+    let img = image::open(output_path_str)?.to_rgb8();
+
     Ok(img)
 }
 
