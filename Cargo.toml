@@ -13,3 +13,9 @@ rand = "0.9.0"
 rand_distr = "0.5.1"
 anyhow = "1.0.97"
 
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Link-time optimization
+codegen-units = 1   # Slower build, smaller size
+panic = "abort"     # Remove panic unwinding
+strip = true        # Strip symbols
