@@ -19,12 +19,88 @@ fn main() -> Result<()> {
     let output_path = cache_dir.join(filename);
 
     let gray_image = image::imageops::grayscale(&image);
-    let noisy_image = add_gaussian_noise(&gray_image, 0.0, 35.0);
 
-    noisy_image.save(&output_path)?;
+    // First apply sky detection and coloring
+    let colored_image = detect_and_color_sky(&gray_image);
+
+    // Then add noise to the colored image
+    let final_image = add_gaussian_noise_to_rgb(&colored_image, 0.0, 35.0);
+
+    final_image.save(&output_path)?;
     set_wallpaper(&output_path)?;
 
     Ok(())
+}
+
+fn add_gaussian_noise_to_rgb(img: &RgbImage, mean: f64, std_dev: f64) -> RgbImage {
+    let width = img.width();
+    let height = img.height();
+
+    let normal = Normal::new(mean, std_dev).unwrap();
+    let mut rng = rand::rng();
+
+    let mut noisy_img = RgbImage::new(width, height);
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+
+            // Add noise to each channel
+            let r = ((pixel[0] as f64) + normal.sample(&mut rng))
+                .max(0.0)
+                .min(255.0) as u8;
+            let g = ((pixel[1] as f64) + normal.sample(&mut rng))
+                .max(0.0)
+                .min(255.0) as u8;
+            let b = ((pixel[2] as f64) + normal.sample(&mut rng))
+                .max(0.0)
+                .min(255.0) as u8;
+
+            noisy_img.put_pixel(x, y, Rgb([r, g, b]));
+        }
+    }
+
+    noisy_img
+}
+
+fn detect_and_color_sky(img: &GrayImage) -> RgbImage {
+    let width = img.width();
+    let height = img.height();
+    let mut result = RgbImage::new(width, height);
+
+    // Convert grayscale to RGB first
+    for y in 0..height {
+        for x in 0..width {
+            let gray_val = img.get_pixel(x, y).0[0];
+            result.put_pixel(x, y, Rgb([gray_val, gray_val, gray_val]));
+        }
+    }
+
+    // Simple sky detection - assume sky is in the upper portion and relatively uniform
+    // This threshold can be adjusted based on your specific images
+    let sky_threshold = 120; // Adjust based on your image brightness
+    let horizon_line = height / 3; // Assume sky is in top third
+
+    // Sky blue color (adjust as needed)
+    let sky_blue = Rgb([135, 206, 235]);
+
+    // Apply blue tint to sky areas
+    for y in 0..horizon_line {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+            if pixel.0[0] > sky_threshold {
+                // This is likely sky - apply blue tint
+                // You can adjust the blending formula for different effects
+                let gray_val = pixel.0[0] as f32 / 255.0;
+                let r = (sky_blue.0[0] as f32 * 0.7 + gray_val * 0.3) as u8;
+                let g = (sky_blue.0[1] as f32 * 0.7 + gray_val * 0.3) as u8;
+                let b = (sky_blue.0[2] as f32 * 0.7 + gray_val * 0.3) as u8;
+                result.put_pixel(x, y, Rgb([r, g, b]));
+            }
+        }
+    }
+
+    result
 }
 
 fn get_cache_dir() -> Result<PathBuf> {
@@ -149,7 +225,7 @@ fn get_first_frame() -> Result<RgbImage> {
     Err(anyhow!("No frames decoded"))
 }
 
-fn add_gaussian_noise(img: &GrayImage, mean: f64, std_dev: f64) -> RgbImage {
+fn _add_gaussian_noise(img: &GrayImage, mean: f64, std_dev: f64) -> RgbImage {
     let width = img.width();
     let height = img.height();
 
