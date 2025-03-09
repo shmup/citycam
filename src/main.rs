@@ -1,12 +1,14 @@
 use anyhow::{anyhow, Result};
 use chrono::Local;
+use ffmpeg_next as ffmpeg;
 use image::{GrayImage, Rgb, RgbImage};
+use m3u8_rs::Playlist;
 use rand_distr::{Distribution, Normal};
 use regex::Regex;
+use std::fs;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::fs;
-use tempfile::NamedTempFile;
 
 fn main() -> Result<()> {
     let cache_dir = get_cache_dir()?;
@@ -49,70 +51,102 @@ fn get_current_stream_url() -> Result<String> {
 }
 
 fn get_first_frame() -> Result<RgbImage> {
+    ffmpeg::init()?;
+
     let m3u8_url = get_current_stream_url()?;
     let response = reqwest::blocking::get(&m3u8_url)?.text()?;
 
     let base_url = m3u8_url
         .rsplit_once('/')
-        .map(|(base, _)| base)
-        .unwrap_or("")
-        .to_string()
-        + "/";
+        .map(|(base, _)| format!("{}/", base))
+        .unwrap_or_default();
 
-    let chunks_playlist = response
-        .lines()
-        .find(|line| !line.starts_with('#') && line.contains(".m3u8"))
-        .ok_or_else(|| anyhow!("No chunks playlist found"))?;
+    let playlist = m3u8_rs::parse_playlist_res(response.as_bytes())
+        .map_err(|e| anyhow!("Failed to parse m3u8: {:?}", e))?;
 
-    let chunks_playlist_url = format!("{}{}", base_url, chunks_playlist);
+    let chunks_playlist_url = match playlist {
+        Playlist::MasterPlaylist(master) => {
+            let variant = master
+                .variants
+                .first()
+                .ok_or_else(|| anyhow!("No variants in master playlist"))?;
+            format!("{}{}", base_url, variant.uri)
+        }
+        Playlist::MediaPlaylist(_) => m3u8_url,
+    };
+
     let chunks_response = reqwest::blocking::get(&chunks_playlist_url)?.text()?;
     let chunks_base_url = chunks_playlist_url
         .rsplit_once('/')
-        .map(|(base, _)| base)
-        .unwrap_or("")
-        .to_string()
-        + "/";
+        .map(|(base, _)| format!("{}/", base))
+        .unwrap_or_default();
 
-    let segment = chunks_response
-        .lines()
-        .find(|line| !line.starts_with('#') && (line.contains(".ts") || line.contains("?")))
-        .ok_or_else(|| anyhow!("No video segments found"))?;
+    let media_playlist = match m3u8_rs::parse_playlist_res(chunks_response.as_bytes())
+        .map_err(|e| anyhow!("Failed to parse media playlist: {:?}", e))?
+    {
+        Playlist::MediaPlaylist(media) => media,
+        _ => return Err(anyhow!("Expected media playlist")),
+    };
 
-    let segment_url = format!("{}{}", chunks_base_url, segment);
+    let segment = media_playlist
+        .segments
+        .first()
+        .ok_or_else(|| anyhow!("No segments in playlist"))?;
+
+    let segment_url = format!("{}{}", chunks_base_url, segment.uri);
     let segment_data = reqwest::blocking::get(&segment_url)?.bytes()?;
 
-    let mut temp_file = NamedTempFile::new()?;
-    std::io::copy(&mut segment_data.as_ref(), &mut temp_file)?;
+    let mut temp_file = tempfile::NamedTempFile::new()?;
+    std::io::copy(&mut Cursor::new(segment_data), &mut temp_file)?;
+    let temp_path = temp_file.path();
 
-    let temp_dir = tempfile::tempdir()?;
-    let output_path = temp_dir.path().join("frame.jpg");
-    let output_path_str = output_path.to_str().unwrap();
+    let mut input_ctx = ffmpeg::format::input(temp_path)?;
+    let input_stream = input_ctx
+        .streams()
+        .best(ffmpeg::media::Type::Video)
+        .ok_or_else(|| anyhow!("No video stream found"))?;
+    let stream_index = input_stream.index();
 
-    let ffmpeg_output = Command::new("ffmpeg")
-        .args(&[
-            "-i",
-            temp_file.path().to_str().unwrap(),
-            "-vframes",
-            "1",
-            "-y",
-            output_path_str,
-        ])
-        .output()?;
+    let mut decoder = ffmpeg::codec::context::Context::from_parameters(input_stream.parameters())?
+        .decoder()
+        .video()?;
 
-    if !ffmpeg_output.status.success() {
-        return Err(anyhow!(
-            "FFmpeg failed: {}",
-            String::from_utf8_lossy(&ffmpeg_output.stderr)
-        ));
+    let mut scaler = ffmpeg::software::scaling::context::Context::get(
+        decoder.format(),
+        decoder.width(),
+        decoder.height(),
+        ffmpeg::format::Pixel::RGB24,
+        decoder.width(),
+        decoder.height(),
+        ffmpeg::software::scaling::flag::Flags::BILINEAR,
+    )?;
+
+    let mut frame = ffmpeg::frame::Video::empty();
+
+    for (stream, packet) in input_ctx.packets() {
+        if stream.index() == stream_index {
+            decoder.send_packet(&packet)?;
+            if decoder.receive_frame(&mut frame).is_ok() {
+                let mut rgb_frame = ffmpeg::frame::Video::new(
+                    ffmpeg::format::Pixel::RGB24,
+                    frame.width(),
+                    frame.height(),
+                );
+                scaler.run(&frame, &mut rgb_frame)?;
+
+                let width = rgb_frame.width() as u32;
+                let height = rgb_frame.height() as u32;
+                let data = rgb_frame.data(0).to_vec();
+
+                let img = RgbImage::from_raw(width, height, data)
+                    .ok_or_else(|| anyhow!("Failed to create image from raw data"))?;
+
+                return Ok(img);
+            }
+        }
     }
 
-    if fs::metadata(output_path_str)?.len() == 0 {
-        return Err(anyhow!("FFmpeg produced an empty output file"));
-    }
-
-    let img = image::open(output_path_str)?.to_rgb8();
-
-    Ok(img)
+    Err(anyhow!("No frames decoded"))
 }
 
 fn add_gaussian_noise(img: &GrayImage, mean: f64, std_dev: f64) -> RgbImage {
