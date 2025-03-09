@@ -51,6 +51,7 @@ fn get_current_stream_url() -> Result<String> {
 
 fn get_first_frame() -> Result<RgbImage> {
     ffmpeg::init()?;
+    ffmpeg::log::set_level(ffmpeg::log::Level::Error);
 
     let m3u8_url = get_current_stream_url()?;
     let response = reqwest::blocking::get(&m3u8_url)?.text()?;
