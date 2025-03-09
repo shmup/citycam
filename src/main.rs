@@ -5,7 +5,7 @@ use rand_distr::{Distribution, Normal};
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, fs};
+use std::fs;
 use tempfile::NamedTempFile;
 
 fn main() -> Result<()> {
@@ -27,8 +27,10 @@ fn main() -> Result<()> {
 }
 
 fn get_cache_dir() -> Result<PathBuf> {
-    let home = env::var("HOME").map_err(|_| anyhow!("HOME environment variable not set"))?;
-    Ok(PathBuf::from(home).join(".cache").join("citycam"))
+    let cache_dir = dirs::cache_dir()
+        .ok_or_else(|| anyhow!("Could not determine cache directory"))?
+        .join("citycam");
+    Ok(cache_dir)
 }
 
 fn get_current_stream_url() -> Result<String> {
