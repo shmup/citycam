@@ -14,8 +14,13 @@ fn main() -> Result<()> {
     let cache_dir = utils::get_cache_dir()?;
     fs::create_dir_all(&cache_dir)?;
     let original_image = stream::get_first_frame()?;
-    let filename = Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
-    let output_path = cache_dir.join(filename);
+
+    let output_path = if args.skip_cache {
+        std::env::temp_dir().join("current_wallpaper.jpg")
+    } else {
+        let filename = Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
+        cache_dir.join(filename)
+    };
 
     let mut processed_image = original_image.clone();
 

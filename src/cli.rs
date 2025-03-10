@@ -19,6 +19,10 @@ pub struct Args {
     /// Noise intensity (0-255 for Salt/Pepper, standard deviation for Gaussian)
     #[arg(short = 'i', long, default_value_t = 25.0)]
     pub noise_intensity: f64,
+
+    /// Skip caching the image
+    #[arg(long = "skip-cache")]
+    pub skip_cache: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
