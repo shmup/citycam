@@ -1,0 +1,1 @@
+maybe we can overlay prev images to create this ghost/walking/moving effect
