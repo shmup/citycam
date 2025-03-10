@@ -17,7 +17,7 @@ pub struct Args {
     pub noise: Option<NoiseType>,
 
     /// Noise intensity (0-255 for Salt/Pepper, standard deviation for Gaussian)
-    #[arg(short = 'i', long, default_value_t = 35.0)]
+    #[arg(short = 'i', long, default_value_t = 25.0)]
     pub noise_intensity: f64,
 }
 
