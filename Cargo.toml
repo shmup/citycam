@@ -19,6 +19,13 @@ ffmpeg-next = "7.1.0"
 wallpaper = "3"
 clap = { version = "4.5.31", features = ["derive"] }
 
+[dev-dependencies]
+tempfile = "3.3"
+
+[lib]
+name = "citycam"
+path = "src/lib.rs"
+
 [profile.release]
 opt-level = "z"     # Optimize for size
 lto = true          # Link-time optimization
