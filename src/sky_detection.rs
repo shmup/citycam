@@ -69,7 +69,7 @@ pub fn detect_sky_region_growing(img: &GrayImage) -> Vec<Vec<bool>> {
 
                 if !sky_mask[ny][nx] {
                     let neighbor_val = img.get_pixel(nx as u32, ny as u32).0[0];
-                    if (neighbor_val as i32 - pixel_val as i32).abs() < 15 && neighbor_val > 100 {
+                    if (neighbor_val as i32 - pixel_val as i32).abs() < 30 && neighbor_val > 100 {
                         sky_mask[ny][nx] = true;
                         seeds.push((nx, ny));
                     }
