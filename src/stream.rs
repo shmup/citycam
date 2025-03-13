@@ -5,19 +5,19 @@ use m3u8_rs::Playlist;
 use regex::Regex;
 use std::io::Cursor;
 
-pub fn get_first_frame() -> Result<RgbImage> {
+use crate::camera::Camera;
+
+pub fn get_first_frame(camera: &Camera) -> Result<RgbImage> {
     ffmpeg::init()?;
     ffmpeg::log::set_level(ffmpeg::log::Level::Error);
 
-    let m3u8_url = get_current_stream_url()?;
+    let m3u8_url = get_current_stream_url(&camera.url)?;
     let segment_data = fetch_first_segment(&m3u8_url)?;
 
     decode_first_frame(&segment_data)
 }
 
-fn get_current_stream_url() -> Result<String> {
-    let frame_url =
-        "https://api.wetmet.net/widgets/stream/frame.php?uid=b1f85cdf621772894ff3300e78dd6035";
+fn get_current_stream_url(frame_url: &str) -> Result<String> {
     let response = reqwest::blocking::get(frame_url)?.text()?;
 
     let re = Regex::new(r"var vurl = '(https://[^']+)'")?;
