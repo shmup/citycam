@@ -1,13 +1,13 @@
 mod camera;
 mod cli;
 mod image_processing;
-mod rotation;  // Add this line
+mod image_processor;
+mod rotation;
 mod sky_detection;
 mod stream;
 mod utils;
 
 use anyhow::{Context, Result};
-use chrono::Local;
 use clap::Parser;
 use std::fs;
 
@@ -30,7 +30,6 @@ fn main() -> Result<()> {
         return rotation::start_rotation(cameras, &args, &cache_dir);
     }
 
-    // Original single-camera logic
     let selected_camera = match &args.camera {
         Some(selector) => camera::find_camera(&cameras, selector).context(format!(
             "Failed to find camera: {}\n{}",
@@ -38,7 +37,6 @@ fn main() -> Result<()> {
             camera::list_cameras(&cameras)
         ))?,
         None => {
-            // default to first camera
             println!("No camera specified, using: {}", cameras[0].name);
             cameras[0].clone()
         }
@@ -47,51 +45,5 @@ fn main() -> Result<()> {
     println!("Using camera: {}", selected_camera.name);
 
     let original_image = stream::get_first_frame(&selected_camera)?;
-
-    let output_path = if args.skip_cache {
-        std::env::temp_dir().join("current_wallpaper.jpg")
-    } else {
-        let filename = Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
-        cache_dir.join(filename)
-    };
-
-    let mut processed_image = original_image.clone();
-
-    if args.grayscale {
-        let gray_image = image::imageops::grayscale(&processed_image);
-        processed_image = image_processing::convert_grayscale_to_rgb(&gray_image);
-    }
-
-    if args.color_sky {
-        let sky_color = sky_detection::get_sky_color_for_time();
-        let gray_for_sky = image::imageops::grayscale(&processed_image);
-        let sky_mask = sky_detection::detect_sky_region_growing(&gray_for_sky);
-        processed_image =
-            sky_detection::apply_sky_color_with_gradient(&processed_image, &sky_mask, sky_color);
-    }
-
-    if let Some(noise_type) = args.noise {
-        match noise_type {
-            cli::NoiseType::Gaussian => {
-                processed_image = image_processing::add_gaussian_noise_to_rgb(
-                    &processed_image,
-                    0.0,
-                    args.noise_intensity,
-                );
-            }
-            cli::NoiseType::SaltPepper => {
-                let density = args.noise_intensity / 255.0;
-                processed_image =
-                    image_processing::add_salt_and_pepper_noise_to_rgb(&processed_image, density);
-            }
-            cli::NoiseType::Poisson => {
-                processed_image = image_processing::add_poisson_noise_to_rgb(&processed_image);
-            }
-        }
-    }
-
-    processed_image.save(&output_path)?;
-    utils::set_wallpaper(&output_path)?;
-
-    Ok(())
+    image_processor::process_and_set_wallpaper(original_image, &args, &cache_dir)
 }
