@@ -1,19 +1,46 @@
+mod camera;
 mod cli;
 mod image_processing;
 mod sky_detection;
 mod stream;
 mod utils;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::Local;
 use clap::Parser;
 use std::fs;
 
 fn main() -> Result<()> {
     let args = cli::Args::parse();
+
+    let cameras = camera::load_cameras(&args.cams_file).context(format!(
+        "Failed to load cameras from {}",
+        args.cams_file.display()
+    ))?;
+
+    if cameras.is_empty() {
+        return Err(anyhow::anyhow!("No cameras found in configuration file"));
+    }
+
+    let selected_camera = match &args.camera {
+        Some(selector) => camera::find_camera(&cameras, selector).context(format!(
+            "Failed to find camera: {}\n{}",
+            selector,
+            camera::list_cameras(&cameras)
+        ))?,
+        None => {
+            // default to first camera
+            println!("No camera specified, using: {}", cameras[0].name);
+            cameras[0].clone()
+        }
+    };
+
+    println!("Using camera: {}", selected_camera.name);
+
     let cache_dir = utils::get_cache_dir()?;
     fs::create_dir_all(&cache_dir)?;
-    let original_image = stream::get_first_frame()?;
+
+    let original_image = stream::get_first_frame(&selected_camera)?;
 
     let output_path = if args.skip_cache {
         std::env::temp_dir().join("current_wallpaper.jpg")

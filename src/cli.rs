@@ -1,4 +1,5 @@
 use clap::{Parser, ValueEnum};
+use std::path::PathBuf;
 
 /// A tool to process webcam images and set them as wallpaper
 #[derive(Parser, Debug)]
@@ -9,7 +10,7 @@ pub struct Args {
     pub grayscale: bool,
 
     /// Apply color to sky based on time of day
-    #[arg(short, long)]
+    #[arg(short = 's', long)]
     pub color_sky: bool,
 
     /// Type of noise to apply to the image
@@ -23,6 +24,14 @@ pub struct Args {
     /// Skip caching the image
     #[arg(long = "skip-cache")]
     pub skip_cache: bool,
+
+    /// Select camera by index (1-based) or name
+    #[arg(short, long)]
+    pub camera: Option<String>,
+
+    /// Path to camera configuration file
+    #[arg(long, default_value = "cams.json")]
+    pub cams_file: PathBuf,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
