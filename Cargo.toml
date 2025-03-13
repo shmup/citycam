@@ -24,10 +24,6 @@ serde_json = "1.0.140"
 [dev-dependencies]
 tempfile = "3.3"
 
-[lib]
-name = "citycam"
-path = "src/lib.rs"
-
 [profile.release]
 opt-level = "z"     # Optimize for size
 lto = true          # Link-time optimization

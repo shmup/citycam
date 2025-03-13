@@ -14,4 +14,3 @@ pub fn set_wallpaper(path: &Path) -> Result<()> {
 
     Ok(())
 }
-

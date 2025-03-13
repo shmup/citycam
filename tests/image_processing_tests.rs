@@ -1,8 +1,7 @@
-use image::{GrayImage, Rgb, RgbImage};
 use citycam::image_processing::{
-    add_gaussian_noise_to_rgb, add_salt_and_pepper_noise_to_rgb,
-    convert_grayscale_to_rgb,
+    add_gaussian_noise_to_rgb, add_salt_and_pepper_noise_to_rgb, convert_grayscale_to_rgb,
 };
+use image::{GrayImage, Rgb, RgbImage};
 
 #[test]
 fn test_convert_grayscale_to_rgb() {
