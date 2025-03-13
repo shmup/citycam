@@ -32,6 +32,14 @@ pub struct Args {
     /// Path to camera configuration file
     #[arg(long, default_value = "cams.json")]
     pub cams_file: PathBuf,
+
+    /// Enable camera rotation
+    #[arg(short = 'r', long, help = "Enable camera rotation")]
+    pub rotate: bool,
+
+    /// Rotation interval in seconds
+    #[arg(long, default_value = "30", help = "Rotation interval in seconds")]
+    pub rotation_interval: u64,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]

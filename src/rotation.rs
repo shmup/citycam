@@ -1,57 +1,39 @@
-mod camera;
-mod cli;
-mod image_processing;
-mod rotation;  // Add this line
-mod sky_detection;
-mod stream;
-mod utils;
+use anyhow::Result;
+use std::path::Path;
+use std::thread;
+use std::time::Duration;
 
-use anyhow::{Context, Result};
-use chrono::Local;
-use clap::Parser;
-use std::fs;
+use crate::camera::Camera;
+use crate::cli;
+use crate::image_processing;
+use crate::sky_detection;
+use crate::stream;
+use crate::utils;
 
-fn main() -> Result<()> {
-    let args = cli::Args::parse();
+pub fn start_rotation(cameras: Vec<Camera>, args: &cli::Args, cache_dir: &Path) -> Result<()> {
+    println!(
+        "Starting camera rotation with interval of {} seconds",
+        args.rotation_interval
+    );
 
-    let cameras = camera::load_cameras(&args.cams_file).context(format!(
-        "Failed to load cameras from {}",
-        args.cams_file.display()
-    ))?;
+    let mut current_index = 0;
 
-    if cameras.is_empty() {
-        return Err(anyhow::anyhow!("No cameras found in configuration file"));
+    loop {
+        let camera = &cameras[current_index];
+        println!("Rotating to camera: {}", camera.name);
+        process_camera(camera, args, cache_dir)?;
+        current_index = (current_index + 1) % cameras.len();
+        thread::sleep(Duration::from_secs(args.rotation_interval));
     }
+}
 
-    let cache_dir = utils::get_cache_dir()?;
-    fs::create_dir_all(&cache_dir)?;
-
-    if args.rotate {
-        return rotation::start_rotation(cameras, &args, &cache_dir);
-    }
-
-    // Original single-camera logic
-    let selected_camera = match &args.camera {
-        Some(selector) => camera::find_camera(&cameras, selector).context(format!(
-            "Failed to find camera: {}\n{}",
-            selector,
-            camera::list_cameras(&cameras)
-        ))?,
-        None => {
-            // default to first camera
-            println!("No camera specified, using: {}", cameras[0].name);
-            cameras[0].clone()
-        }
-    };
-
-    println!("Using camera: {}", selected_camera.name);
-
-    let original_image = stream::get_first_frame(&selected_camera)?;
+fn process_camera(camera: &Camera, args: &cli::Args, cache_dir: &Path) -> Result<()> {
+    let original_image = stream::get_first_frame(camera)?;
 
     let output_path = if args.skip_cache {
         std::env::temp_dir().join("current_wallpaper.jpg")
     } else {
-        let filename = Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
+        let filename = chrono::Local::now().format("%Y%m%d-%H%M%S.jpg").to_string();
         cache_dir.join(filename)
     };
 
@@ -70,7 +52,7 @@ fn main() -> Result<()> {
             sky_detection::apply_sky_color_with_gradient(&processed_image, &sky_mask, sky_color);
     }
 
-    if let Some(noise_type) = args.noise {
+    if let Some(noise_type) = &args.noise {
         match noise_type {
             cli::NoiseType::Gaussian => {
                 processed_image = image_processing::add_gaussian_noise_to_rgb(
