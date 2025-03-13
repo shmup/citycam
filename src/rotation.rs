@@ -20,8 +20,18 @@ pub fn start_rotation(cameras: Vec<Camera>, args: &cli::Args, cache_dir: &Path) 
         let camera = &cameras[current_index];
         println!("Rotating to camera: {}", camera.name);
 
-        let original_image = stream::get_first_frame(camera)?;
-        image_processor::process_and_set_wallpaper(original_image, args, cache_dir)?;
+        match stream::get_first_frame(camera) {
+            Ok(original_image) => {
+                if let Err(e) =
+                    image_processor::process_and_set_wallpaper(original_image, args, cache_dir)
+                {
+                    eprintln!("Failed to process image for {}: {}", camera.name, e);
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to get frame from {}: {}", camera.name, e);
+            }
+        }
 
         current_index = (current_index + 1) % cameras.len();
         thread::sleep(Duration::from_secs(args.rotation_interval));
