@@ -1,0 +1,66 @@
+[
+  {
+    "name": "Binder Park Zoo",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=3e98e7fa64f09d0c6e36dd0da96eea7b"
+  },
+  {
+    "name": "Drummond Island Ferry Dock",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=881f22e2458a30ac72f38a76156f0976"
+  },
+  {
+    "name": "Drummond Island Yacht Haven",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=609fd1e6905ac5196fb8534a64f36993"
+  },
+  {
+    "name": "Grand Rapids Public Museum",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=7bcde7d22d900d7061461d4953482c4b"
+  },
+  {
+    "name": "Great Lakes Shipwreck Museum",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=977a312d5da91e21bc63f295c0b12cc7"
+  },
+  {
+    "name": "Houghton Lake",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=0078e19836670d1cc8e3ec3ef111c22c"
+  },
+  {
+    "name": "Lake Leelanau Narrows Yacht Club",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=edfdc78612627fecbb262075c15ad4ca"
+  },
+  {
+    "name": "Mackinac Bridge Mackinaw City",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=bf59fb1cfad0aee22ea7d00974c48669"
+  },
+  {
+    "name": "Mackinac Grille St Ignace",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=25789475ee89b4353e0300d17f30caa0"
+  },
+  {
+    "name": "Marquette",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=08a47e963e2f369ca92e4fe022b7f329"
+  },
+  {
+    "name": "Mission Point",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=2e25804bc117f7aa96781ae3e4593a00"
+  },
+  {
+    "name": "Muskegon Luge Adventure Sports Park",
+    "url": "https://api.wetmet.net/widgets/image/frame.php?uid=434b1b9dbe33b987e85ad3aa5637fd6d"
+  },
+  {
+    "name": "Sault Ste Marie",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=8ed6053f44bc8551528069b70c6ebe6b"
+  },
+  {
+    "name": "The Vogue Theatre Manistee",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=6a6fb5ae85567908d19b92b205e0f17c"
+  },
+  {
+    "name": "Traverse City",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=b1f85cdf621772894ff3300e78dd6035"
+  },
+  {
+    "name": "USS Silversides Submarine Museum Muskegon",
+    "url": "https://api.wetmet.net/widgets/stream/frame.php?uid=75d6541617a2c940bd4d8a798aa35a69"
+  }
+]
