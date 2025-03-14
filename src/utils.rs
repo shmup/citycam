@@ -13,6 +13,7 @@ pub fn set_wallpaper(path: &Path) -> Result<()> {
 
     wallpaper::set_from_path(path_str).map_err(|e| anyhow!("Failed to set wallpaper: {}", e))?;
 
+    #[cfg(target_os = "windows")]
     wallpaper::set_mode(wallpaper::Mode::Crop)
         .map_err(|e| anyhow!("Failed to set wallpaper mode: {}", e))?;
 
