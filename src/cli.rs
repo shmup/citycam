@@ -1,5 +1,4 @@
 use clap::{Parser, ValueEnum};
-use std::path::PathBuf;
 
 /// A tool to process webcam images and set them as wallpaper
 #[derive(Parser, Debug)]
@@ -30,8 +29,8 @@ pub struct Args {
     pub camera: Option<String>,
 
     /// Path to camera configuration file
-    #[arg(long, default_value = "cams.json")]
-    pub cams_file: PathBuf,
+    #[arg(long)]
+    pub cams_file: Option<std::path::PathBuf>,
 
     /// Enable camera rotation
     #[arg(short = 'r', long, help = "Enable camera rotation")]

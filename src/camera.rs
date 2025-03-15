@@ -9,6 +9,12 @@ pub struct Camera {
     pub url: String,
 }
 
+pub fn get_embedded_cameras() -> Result<Vec<Camera>> {
+    let content = include_str!("../resources/cams.json");
+    let cameras: Vec<Camera> = serde_json::from_str(content)?;
+    Ok(cameras)
+}
+
 pub fn load_cameras<P: AsRef<Path>>(path: P) -> Result<Vec<Camera>> {
     let content = fs::read_to_string(path)?;
     let cameras: Vec<Camera> = serde_json::from_str(&content)?;

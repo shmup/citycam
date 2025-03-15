@@ -14,14 +14,11 @@ use std::fs;
 fn main() -> Result<()> {
     let args = cli::Args::parse();
 
-    let cameras = camera::load_cameras(&args.cams_file).context(format!(
-        "Failed to load cameras from {}",
-        args.cams_file.display()
-    ))?;
-
-    if cameras.is_empty() {
-        return Err(anyhow::anyhow!("No cameras found in configuration file"));
-    }
+    let cameras = match &args.cams_file {
+        Some(path) => camera::load_cameras(path)
+            .context(format!("Failed to load cameras from {}", path.display()))?,
+        None => camera::get_embedded_cameras().context("Failed to load embedded cameras")?,
+    };
 
     let cache_dir = utils::get_cache_dir()?;
     fs::create_dir_all(&cache_dir)?;
