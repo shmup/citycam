@@ -35,6 +35,11 @@ pub fn process_and_set_wallpaper(
             sky_detection::apply_sky_color_with_gradient(&processed_image, &sky_mask, sky_color);
     }
 
+    if let Some(tint_color) = &args.tint_color {
+        processed_image =
+            image_processing::apply_tint_to_rgb(&processed_image, tint_color, args.tint_intensity);
+    }
+
     if let Some(noise_type) = &args.noise {
         match noise_type {
             cli::NoiseType::Gaussian => {

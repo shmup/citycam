@@ -39,6 +39,14 @@ pub struct Args {
     /// Rotation interval in seconds
     #[arg(long, default_value = "30", help = "Rotation interval in seconds")]
     pub rotation_interval: u64,
+
+    /// Apply tint to the image
+    #[arg(short = 't', long)]
+    pub tint_color: Option<String>,
+
+    /// Tint intensity (0.0 to 1.0)
+    #[arg(long, default_value_t = 0.5)]
+    pub tint_intensity: f32
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
