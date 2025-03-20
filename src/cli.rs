@@ -40,6 +40,10 @@ pub struct Args {
     /// Rotation interval in seconds
     #[arg(long, default_value = "30", help = "Rotation interval in seconds")]
     pub rotation_interval: u64,
+
+    /// Run the GUI
+    #[arg(long)]
+    pub gui: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
