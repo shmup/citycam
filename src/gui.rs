@@ -8,13 +8,13 @@ pub fn run_gui() -> iced::Result {
 struct CityCam {
     message: String,
     is_grayscale: bool,
-    noise_intensity: f32,
+    noise_intensity: f64,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
     CheckboxToggled(bool),
-    NoiseIntensityChanged(f32),
+    NoiseIntensityChanged(f64),
     ApplyWallpaper,
 }
 
@@ -48,20 +48,10 @@ impl CityCam {
                 let noise_intensity = self.noise_intensity;
 
                 std::thread::spawn(move || {
-                    let args = crate::cli::Args {
-                        grayscale: is_grayscale,
-                        color_sky: false,
-                        noise: Some(crate::cli::NoiseType::Gaussian),
-                        noise_intensity: noise_intensity as f64,
-                        skip_cache: false,
-                        camera: Some("Traverse City".to_string()),
-                        cams_file: None,
-                        rotate: false,
-                        rotation_interval: 30,
-                        tint_color: None,
-                        tint_intensity: 0.5,
-                        gui: false,
-                    };
+                    let mut args = crate::cli::Args::default();
+
+                    args.grayscale = is_grayscale;
+                    args.noise_intensity = noise_intensity;
 
                     let cache_dir = match crate::utils::get_cache_dir() {
                         Ok(dir) => dir,

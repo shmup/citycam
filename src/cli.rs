@@ -62,3 +62,22 @@ pub enum NoiseType {
     /// Add Poisson noise to the image
     Poisson,
 }
+
+impl Default for Args {
+    fn default() -> Self {
+        Self {
+            grayscale: false,
+            color_sky: false,
+            noise: None,
+            noise_intensity: 25.0,
+            skip_cache: false,
+            camera: None,
+            cams_file: None,
+            rotate: false,
+            rotation_interval: 30,
+            tint_color: None,
+            tint_intensity: 0.5,
+            gui: false,
+        }
+    }
+}
