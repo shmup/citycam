@@ -1,4 +1,4 @@
-use iced::widget::{center, checkbox, column, scrollable, slider, text, vertical_space};
+use iced::widget::{button, center, checkbox, column, scrollable, slider, text, vertical_space};
 use iced::{Center, Element, Fill};
 
 pub fn run_gui() -> iced::Result {
@@ -15,6 +15,7 @@ struct CityCam {
 enum Message {
     CheckboxToggled(bool),
     NoiseIntensityChanged(f32),
+    ApplyWallpaper,
 }
 
 impl CityCam {
@@ -40,6 +41,9 @@ impl CityCam {
                 self.noise_intensity = value;
                 self.message = format!("Noise intensity set to: {:.2}", value);
             }
+            Message::ApplyWallpaper => {
+                self.message = "Applying wallpaper to desktop...".to_string();
+            }
         }
     }
 
@@ -53,6 +57,7 @@ impl CityCam {
             ),
             vertical_space().height(150),
             text(&self.message),
+            button("Apply Wallpaper").on_press(Message::ApplyWallpaper),
         ]
         .width(Fill)
         .align_x(Center)
