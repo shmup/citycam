@@ -43,6 +43,47 @@ impl CityCam {
             }
             Message::ApplyWallpaper => {
                 self.message = "Applying wallpaper to desktop...".to_string();
+
+                let is_grayscale = self.is_grayscale;
+                let noise_intensity = self.noise_intensity;
+
+                std::thread::spawn(move || {
+                    let args = crate::cli::Args {
+                        grayscale: is_grayscale,
+                        color_sky: false,
+                        noise: Some(crate::cli::NoiseType::Gaussian),
+                        noise_intensity: noise_intensity as f64,
+                        skip_cache: false,
+                        camera: Some("Traverse City".to_string()),
+                        cams_file: None,
+                        rotate: false,
+                        rotation_interval: 30,
+                        tint_color: None,
+                        tint_intensity: 0.5,
+                        gui: false,
+                    };
+
+                    let cache_dir = match crate::utils::get_cache_dir() {
+                        Ok(dir) => dir,
+                        Err(_) => return,
+                    };
+
+                    let cameras = match crate::camera::get_embedded_cameras() {
+                        Ok(cams) => cams,
+                        Err(_) => return,
+                    };
+
+                    let camera = match crate::camera::find_camera(&cameras, "Traverse City") {
+                        Ok(cam) => cam,
+                        Err(_) => return,
+                    };
+
+                    if let Ok(image) = crate::stream::get_first_frame(&camera) {
+                        let _ = crate::image_processor::process_and_set_wallpaper(
+                            image, &args, &cache_dir,
+                        );
+                    }
+                });
             }
         }
     }
