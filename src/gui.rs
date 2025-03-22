@@ -1,4 +1,4 @@
-use iced::widget::{center, checkbox, column, scrollable, text, vertical_space};
+use iced::widget::{center, checkbox, column, scrollable, slider, text, vertical_space};
 use iced::{Center, Element, Fill};
 
 pub fn run_gui() -> iced::Result {
@@ -8,11 +8,13 @@ pub fn run_gui() -> iced::Result {
 struct CityCam {
     message: String,
     is_grayscale: bool,
+    noise_intensity: f32,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
     CheckboxToggled(bool),
+    NoiseIntensityChanged(f32),
 }
 
 impl CityCam {
@@ -20,6 +22,7 @@ impl CityCam {
         Self {
             message: String::new(),
             is_grayscale: false,
+            noise_intensity: 25.0,
         }
     }
 
@@ -33,12 +36,21 @@ impl CityCam {
                     self.message = "Grayscale mode disabled".to_string();
                 }
             }
+            Message::NoiseIntensityChanged(value) => {
+                self.noise_intensity = value;
+                self.message = format!("Noise intensity set to: {:.2}", value);
+            }
         }
     }
 
     fn view(&self) -> Element<Message> {
         let content = column![
             checkbox("Grayscale", self.is_grayscale).on_toggle(Message::CheckboxToggled),
+            slider(
+                0.0..=100.0,
+                self.noise_intensity,
+                Message::NoiseIntensityChanged,
+            ),
             vertical_space().height(150),
             text(&self.message),
         ]
