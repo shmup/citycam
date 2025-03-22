@@ -2,7 +2,10 @@ use iced::widget::{button, center, checkbox, column, scrollable, slider, text, v
 use iced::{Center, Element, Fill};
 
 pub fn run_gui() -> iced::Result {
-    iced::run("citycam", CityCam::update, CityCam::view)
+    iced::application("citycam", CityCam::update, CityCam::view)
+        .window_size([400.0, 300.0])
+        .centered()
+        .run()
 }
 
 struct CityCam {
