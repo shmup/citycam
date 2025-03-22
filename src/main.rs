@@ -1,5 +1,6 @@
 mod camera;
 mod cli;
+mod gui;
 mod image_processing;
 mod image_processor;
 mod rotation;
@@ -13,6 +14,10 @@ use std::fs;
 
 fn main() -> Result<()> {
     let args = cli::Args::parse();
+
+    if args.gui {
+        return Ok(gui::run_gui()?);
+    }
 
     let cameras = match &args.cams_file {
         Some(path) => camera::load_cameras(path)

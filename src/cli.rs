@@ -46,7 +46,11 @@ pub struct Args {
 
     /// Tint intensity (0.0 to 1.0)
     #[arg(long, default_value_t = 0.5)]
-    pub tint_intensity: f32
+    pub tint_intensity: f32,
+
+    /// Run the GUI
+    #[arg(long)]
+    pub gui: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
