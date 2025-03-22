@@ -23,10 +23,12 @@ enum Message {
 
 impl CityCam {
     fn new() -> Self {
+        let args = crate::cli::Args::default();
+
         Self {
             message: String::new(),
-            is_grayscale: false,
-            noise_intensity: 25.0,
+            is_grayscale: args.grayscale,
+            noise_intensity: args.noise_intensity,
         }
     }
 
