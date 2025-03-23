@@ -1,24 +1,16 @@
 use iced::widget::{button, center, checkbox, column, scrollable, slider, text, vertical_space};
 use iced::{Center, Element, Fill};
 
+mod types;
+use types::CityCam;
+use types::Message;
+
+
 pub fn run_gui() -> iced::Result {
     iced::application("citycam", CityCam::update, CityCam::view)
         .window_size([400.0, 300.0])
         .centered()
         .run()
-}
-
-struct CityCam {
-    message: String,
-    is_grayscale: bool,
-    noise_intensity: f64,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Message {
-    CheckboxToggled(bool),
-    NoiseIntensityChanged(f64),
-    ApplyWallpaper,
 }
 
 impl CityCam {
