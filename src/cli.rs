@@ -1,4 +1,5 @@
-use clap::{Parser, ValueEnum};
+use crate::types::NoiseType;
+use clap::Parser;
 
 /// A tool to process webcam images and set them as wallpaper
 #[derive(Parser, Debug)]
@@ -51,16 +52,6 @@ pub struct Args {
     /// Run the GUI
     #[arg(long)]
     pub gui: bool,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
-pub enum NoiseType {
-    /// Add Gaussian noise to the image
-    Gaussian,
-    /// Add Salt and Pepper noise to the image
-    SaltPepper,
-    /// Add Poisson noise to the image
-    Poisson,
 }
 
 impl Default for Args {

@@ -1,6 +1,7 @@
 mod camera;
 mod cli;
 mod gui;
+mod types;
 mod image_processing;
 mod image_processor;
 mod rotation;

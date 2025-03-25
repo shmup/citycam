@@ -1,4 +1,4 @@
-use crate::cli::NoiseType;
+use crate::types::NoiseType;
 
 pub struct CityCam {
     pub message: String,

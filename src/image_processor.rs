@@ -4,6 +4,7 @@ use image::RgbImage;
 use std::path::Path;
 
 use crate::cli;
+use crate::types;
 use crate::image_processing;
 use crate::sky_detection;
 use crate::utils;
@@ -42,19 +43,19 @@ pub fn process_and_set_wallpaper(
 
     if let Some(noise_type) = &args.noise {
         match noise_type {
-            cli::NoiseType::Gaussian => {
+            types::NoiseType::Gaussian => {
                 processed_image = image_processing::add_gaussian_noise_to_rgb(
                     &processed_image,
                     0.0,
                     args.noise_intensity,
                 );
             }
-            cli::NoiseType::SaltPepper => {
+            types::NoiseType::SaltPepper => {
                 let density = args.noise_intensity / 255.0;
                 processed_image =
                     image_processing::add_salt_and_pepper_noise_to_rgb(&processed_image, density);
             }
-            cli::NoiseType::Poisson => {
+            types::NoiseType::Poisson => {
                 processed_image = image_processing::add_poisson_noise_to_rgb(&processed_image);
             }
         }

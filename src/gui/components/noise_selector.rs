@@ -1,4 +1,4 @@
-use crate::cli::NoiseType;
+use crate::types::NoiseType;
 use crate::gui::types::Message;
 use iced::widget::{column, radio, text};
 use iced::Element;
