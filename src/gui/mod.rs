@@ -30,7 +30,7 @@ impl CityCam {
 
     fn update(&mut self, message: Message) {
         match message {
-            Message::CheckboxToggled(is_checked) => {
+            Message::GrayscaleToggled(is_checked) => {
                 self.is_grayscale = is_checked;
                 if self.is_grayscale {
                     self.message = "Grayscale mode enabled".to_string();

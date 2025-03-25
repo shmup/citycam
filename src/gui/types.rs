@@ -9,7 +9,7 @@ pub struct CityCam {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
-    CheckboxToggled(bool),
+    GrayscaleToggled(bool),
     NoiseIntensityChanged(f64),
     ApplyWallpaper,
     NoiseTypeSelected(Option<NoiseType>)
