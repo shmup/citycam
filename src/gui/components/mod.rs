@@ -1,3 +1,3 @@
-pub mod noise_selector;
+pub mod noise_radio;
 
-pub use noise_selector::view as noise_selector_view;
+pub use noise_radio::view as noise_radio_view;

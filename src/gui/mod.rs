@@ -95,7 +95,7 @@ impl CityCam {
     fn view(&self) -> Element<Message> {
         let content = column![
             checkbox("Grayscale", self.is_grayscale).on_toggle(Message::GrayscaleToggled),
-            components::noise_selector_view(self.noise_type),
+            components::noise_radio_view(self.noise_type),
             slider(
                 0.0..=100.0,
                 self.noise_intensity,
