@@ -1,3 +1,7 @@
+develop:
+  cargo build
+  ls -lah target/debug/citycam
+
 release:
   cargo build --release
   upx target/release/citycam
