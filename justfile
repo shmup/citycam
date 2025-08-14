@@ -1,4 +1,4 @@
-develop:
+debug-build:
   cargo build
   ls -lah target/debug/citycam
 

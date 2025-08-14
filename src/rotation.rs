@@ -1,3 +1,6 @@
+// ABOUTME: This module handles automatic rotation between multiple camera feeds
+// ABOUTME: It switches wallpapers at regular intervals using different camera views
+
 use anyhow::Result;
 use std::path::Path;
 use std::thread;
@@ -20,7 +23,7 @@ pub fn start_rotation(cameras: Vec<Camera>, args: &cli::Args, cache_dir: &Path) 
         let camera = &cameras[current_index];
         println!("Rotating to camera: {}", camera.name);
 
-        match stream::get_first_frame(camera) {
+        match stream::get_first_frame_blocking(camera) {
             Ok(original_image) => {
                 if let Err(e) =
                     image_processor::process_and_set_wallpaper(original_image, args, cache_dir)

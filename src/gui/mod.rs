@@ -110,7 +110,7 @@ impl CityCam {
                         Err(_) => return,
                     };
 
-                    if let Ok(image) = crate::stream::get_first_frame(&camera) {
+                    if let Ok(image) = crate::stream::get_first_frame_blocking(&camera) {
                         let _ = crate::image_processor::process_and_set_wallpaper(
                             image, &args, &cache_dir,
                         );
@@ -195,25 +195,18 @@ impl CityCam {
             
             let task = Task::perform(
                 async move {
-                    // Run the blocking operation in a separate thread
-                    let result = std::thread::spawn(move || {
-                        match crate::stream::get_first_frame(&camera) {
-                            Ok(image) => {
-                                // Convert DynamicImage to bytes
-                                let mut buffer = Vec::new();
-                                if image.write_to(&mut std::io::Cursor::new(&mut buffer), image::ImageFormat::Png).is_ok() {
-                                    Ok(buffer)
-                                } else {
-                                    Err("Failed to encode image".to_string())
-                                }
+                    // Use blocking version with its own tokio runtime
+                    match crate::stream::get_first_frame_blocking(&camera) {
+                        Ok(image) => {
+                            // Convert DynamicImage to bytes
+                            let mut buffer = Vec::new();
+                            if image.write_to(&mut std::io::Cursor::new(&mut buffer), image::ImageFormat::Png).is_ok() {
+                                (index, Ok(buffer))
+                            } else {
+                                (index, Err("Failed to encode image".to_string()))
                             }
-                            Err(e) => Err(e.to_string())
                         }
-                    }).join();
-                    
-                    match result {
-                        Ok(inner_result) => (index, inner_result),
-                        Err(_) => (index, Err("Thread panic".to_string())),
+                        Err(e) => (index, Err(e.to_string()))
                     }
                 },
                 |(index, result)| Message::ImageLoaded(index, result)

@@ -47,6 +47,6 @@ fn main() -> Result<()> {
 
     println!("Using camera: {}", selected_camera.name);
 
-    let original_image = stream::get_first_frame(&selected_camera)?;
+    let original_image = stream::get_first_frame_blocking(&selected_camera)?;
     image_processor::process_and_set_wallpaper(original_image, &args, &cache_dir)
 }
