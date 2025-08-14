@@ -5,7 +5,7 @@ use iced::widget::{button, checkbox, container, row, slider, text, Column, Row};
 use iced::{Element, Length};
 
 use crate::gui::components::camera_feed::camera_feed_view_with_size;
-use crate::gui::types::{CameraFeed, CityCam, Message};
+use crate::gui::types::{CityCam, Message};
 
 pub fn gallery_view(citycam: &CityCam) -> Element<'_, Message> {
     let feeds = &citycam.camera_feeds;
@@ -75,7 +75,7 @@ pub fn gallery_view(citycam: &CityCam) -> Element<'_, Message> {
 
         for (index, feed) in feeds.iter().enumerate() {
             current_row = current_row.push(
-                container(camera_feed_view_with_size(feed, card_height))
+                container(camera_feed_view_with_size(feed, card_height, index))
                     .width(Length::FillPortion(1)),
             );
 

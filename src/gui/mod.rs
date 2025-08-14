@@ -3,6 +3,7 @@ use iced::{Center, Element, Fill, Subscription, Task};
 use std::time::Instant;
 
 mod components;
+use components::focused_view::focused_view;
 use components::gallery_view::gallery_view;
 use components::noise_radio;
 
@@ -172,6 +173,12 @@ impl CityCam {
                     Task::none()
                 }
             }
+            Message::FeedClicked(index) => {
+                if index < self.camera_feeds.len() {
+                    self.current_view = View::FocusedFeed(index);
+                }
+                Task::none()
+            }
         }
     }
 
@@ -179,6 +186,7 @@ impl CityCam {
         match self.current_view {
             View::Config => self.config_view(),
             View::Gallery => gallery_view(self),
+            View::FocusedFeed(index) => focused_view(self, index),
         }
     }
 

@@ -1,12 +1,16 @@
 // ABOUTME: camera feed component for displaying a single camera's image
 // ABOUTME: shows the camera name, last image, and error state if any
 
-use iced::widget::{container, text, Column, Image};
+use iced::widget::{button, container, text, Column, Image};
 use iced::{Element, Length, Theme};
 
 use crate::gui::types::{CameraFeed, Message};
 
-pub fn camera_feed_view_with_size(feed: &CameraFeed, card_height: f32) -> Element<'_, Message> {
+pub fn camera_feed_view_with_size(
+    feed: &CameraFeed,
+    card_height: f32,
+    feed_index: usize,
+) -> Element<'_, Message> {
     // Create the main feed content area - always the same size
     let feed_content = if let Some(handle) = &feed.last_image {
         container(
@@ -86,18 +90,28 @@ pub fn camera_feed_view_with_size(feed: &CameraFeed, card_height: f32) -> Elemen
             }),
         );
 
-    container(card_content)
-        .width(Length::Fill)
-        .padding(4)
-        .style(|theme: &Theme| container::Style {
-            background: Some(theme.palette().background.scale_alpha(0.9).into()),
-            border: iced::Border::default().rounded(6.0),
-            shadow: iced::Shadow {
-                color: theme.palette().background.scale_alpha(0.3),
-                offset: iced::Vector::new(0.0, 2.0),
-                blur_radius: 4.0,
-            },
-            ..Default::default()
-        })
-        .into()
+    button(
+        container(card_content)
+            .width(Length::Fill)
+            .padding(4)
+            .style(|theme: &Theme| container::Style {
+                background: Some(theme.palette().background.scale_alpha(0.9).into()),
+                border: iced::Border::default().rounded(6.0),
+                shadow: iced::Shadow {
+                    color: theme.palette().background.scale_alpha(0.3),
+                    offset: iced::Vector::new(0.0, 2.0),
+                    blur_radius: 4.0,
+                },
+                ..Default::default()
+            }),
+    )
+    .on_press(Message::FeedClicked(feed_index))
+    .style(|theme: &Theme, _status| button::Style {
+        background: None,
+        border: iced::Border::default(),
+        shadow: iced::Shadow::default(),
+        text_color: theme.palette().text,
+    })
+    .width(Length::Fill)
+    .into()
 }

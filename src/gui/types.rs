@@ -27,11 +27,13 @@ pub enum Message {
     AutoRefreshToggled(bool),
     AutoRefreshIntervalChanged(f64),
     AutoRefreshTick,
+    FeedClicked(usize), // Index of the clicked camera feed
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum View {
     Config,
     Gallery,
+    FocusedFeed(usize), // Index of the focused camera feed
 }
 
 #[derive(Debug, Clone)]
