@@ -174,10 +174,3 @@ pub fn get_first_frame_blocking(camera: &Camera) -> Result<RgbImage> {
         .build()?;
     rt.block_on(get_first_frame(camera))
 }
-
-pub async fn get_frames_parallel(cameras: &[Camera]) -> Vec<Result<RgbImage>> {
-    use futures::future::join_all;
-
-    let futures = cameras.iter().map(|camera| get_first_frame(camera));
-    join_all(futures).await
-}

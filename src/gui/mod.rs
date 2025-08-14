@@ -48,6 +48,7 @@ impl CityCam {
             window_size: iced::Size::new(1200.0, 800.0), // Default size
             auto_refresh_interval: 10,                   // Default 10 seconds
             auto_refresh_enabled: false,
+            hide_error_feeds: true, // Default to hiding dead feeds (Unearth unchecked)
         }
     }
 
@@ -177,6 +178,10 @@ impl CityCam {
                 if index < self.camera_feeds.len() {
                     self.current_view = View::FocusedFeed(index);
                 }
+                Task::none()
+            }
+            Message::HideErrorFeedsToggled(hide) => {
+                self.hide_error_feeds = hide;
                 Task::none()
             }
         }

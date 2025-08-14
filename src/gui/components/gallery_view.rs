@@ -39,6 +39,9 @@ pub fn gallery_view(citycam: &CityCam) -> Element<'_, Message> {
         150.0
     };
 
+    // Calculate number of dead feeds (feeds with errors)
+    let dead_feed_count = feeds.iter().filter(|feed| feed.error.is_some()).count();
+
     // Compact header
     let header = row![
         text("Camera Gallery").size(18),
@@ -55,6 +58,11 @@ pub fn gallery_view(citycam: &CityCam) -> Element<'_, Message> {
             Message::AutoRefreshIntervalChanged
         )
         .width(100),
+        checkbox(
+            format!("Unearth ({})", dead_feed_count),
+            !citycam.hide_error_feeds // Invert: checked means show dead feeds
+        )
+        .on_toggle(|checked| Message::HideErrorFeedsToggled(!checked)),
     ]
     .spacing(15)
     .align_y(iced::Alignment::Center);
@@ -69,25 +77,45 @@ pub fn gallery_view(citycam: &CityCam) -> Element<'_, Message> {
                 .center_y(Length::Fill),
         );
     } else {
+        // Filter feeds based on hide_error_feeds setting
+        let filtered_feeds: Vec<(usize, &_)> = feeds
+            .iter()
+            .enumerate()
+            .filter(|(_, feed)| {
+                if citycam.hide_error_feeds {
+                    feed.error.is_none() // Only show feeds without errors
+                } else {
+                    true // Show all feeds
+                }
+            })
+            .collect();
+
         // Create responsive grid layout that fills the window
         let mut grid = Column::new().spacing(8);
         let mut current_row = Row::new().spacing(8);
+        let mut feeds_in_current_row = 0;
 
-        for (index, feed) in feeds.iter().enumerate() {
+        for (original_index, feed) in filtered_feeds.iter() {
             current_row = current_row.push(
-                container(camera_feed_view_with_size(feed, card_height, index))
-                    .width(Length::FillPortion(1)),
+                container(camera_feed_view_with_size(
+                    feed,
+                    card_height,
+                    *original_index,
+                ))
+                .width(Length::FillPortion(1)),
             );
+            feeds_in_current_row += 1;
 
             // Start a new row after every `cols` cameras
-            if (index + 1) % cols == 0 {
+            if feeds_in_current_row % cols == 0 {
                 grid = grid.push(current_row);
                 current_row = Row::new().spacing(8);
+                feeds_in_current_row = 0;
             }
         }
 
         // Add any remaining cameras in the last row
-        if feeds.len() % cols != 0 {
+        if feeds_in_current_row > 0 {
             grid = grid.push(current_row);
         }
 

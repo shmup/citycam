@@ -11,6 +11,7 @@ pub struct CityCam {
     pub window_size: iced::Size,
     pub auto_refresh_interval: u64, // seconds
     pub auto_refresh_enabled: bool,
+    pub hide_error_feeds: bool, // Hide feeds with errors (unearth)
 }
 
 #[derive(Debug, Clone)]
@@ -27,7 +28,8 @@ pub enum Message {
     AutoRefreshToggled(bool),
     AutoRefreshIntervalChanged(f64),
     AutoRefreshTick,
-    FeedClicked(usize), // Index of the clicked camera feed
+    FeedClicked(usize),          // Index of the clicked camera feed
+    HideErrorFeedsToggled(bool), // Toggle to hide/show error feeds
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum View {
