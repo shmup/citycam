@@ -1,12 +1,12 @@
 mod camera;
 mod cli;
 mod gui;
-mod types;
 mod image_processing;
 mod image_processor;
 mod rotation;
 mod sky_detection;
 mod stream;
+mod types;
 mod utils;
 
 use anyhow::{Context, Result};

@@ -4,9 +4,9 @@ use image::RgbImage;
 use std::path::Path;
 
 use crate::cli;
-use crate::types;
 use crate::image_processing;
 use crate::sky_detection;
+use crate::types;
 use crate::utils;
 
 pub fn process_and_set_wallpaper(

@@ -22,10 +22,17 @@ pub async fn get_first_frame(camera: &Camera) -> Result<RgbImage> {
 }
 
 async fn get_current_stream_url(frame_url: &str) -> Result<String> {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()?;
-    
+    static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
+    let client = CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .pool_max_idle_per_host(20)
+            .pool_idle_timeout(Duration::from_secs(30))
+            .tcp_nodelay(true)
+            .build()
+            .expect("Failed to create HTTP client")
+    });
+
     let response = client.get(frame_url).send().await?.text().await?;
 
     let re = Regex::new(r"var vurl = '(https://[^']+)'")?;
@@ -39,10 +46,17 @@ async fn get_current_stream_url(frame_url: &str) -> Result<String> {
 }
 
 async fn fetch_first_segment(m3u8_url: &str) -> Result<Vec<u8>> {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()?;
-    
+    static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
+    let client = CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .pool_max_idle_per_host(20)
+            .pool_idle_timeout(Duration::from_secs(30))
+            .tcp_nodelay(true)
+            .build()
+            .expect("Failed to create HTTP client")
+    });
+
     let response = client.get(m3u8_url).send().await?.text().await?;
 
     let base_url = m3u8_url
@@ -64,7 +78,12 @@ async fn fetch_first_segment(m3u8_url: &str) -> Result<Vec<u8>> {
         Playlist::MediaPlaylist(_) => m3u8_url.to_string(),
     };
 
-    let chunks_response = client.get(&chunks_playlist_url).send().await?.text().await?;
+    let chunks_response = client
+        .get(&chunks_playlist_url)
+        .send()
+        .await?
+        .text()
+        .await?;
     let chunks_base_url = chunks_playlist_url
         .rsplit_once('/')
         .map(|(base, _)| format!("{}/", base))
@@ -83,7 +102,13 @@ async fn fetch_first_segment(m3u8_url: &str) -> Result<Vec<u8>> {
         .ok_or_else(|| anyhow!("No segments in playlist"))?;
 
     let segment_url = format!("{}{}", chunks_base_url, segment.uri);
-    let segment_data = client.get(&segment_url).send().await?.bytes().await?.to_vec();
+    let segment_data = client
+        .get(&segment_url)
+        .send()
+        .await?
+        .bytes()
+        .await?
+        .to_vec();
 
     Ok(segment_data)
 }
@@ -152,7 +177,7 @@ pub fn get_first_frame_blocking(camera: &Camera) -> Result<RgbImage> {
 
 pub async fn get_frames_parallel(cameras: &[Camera]) -> Vec<Result<RgbImage>> {
     use futures::future::join_all;
-    
+
     let futures = cameras.iter().map(|camera| get_first_frame(camera));
     join_all(futures).await
 }

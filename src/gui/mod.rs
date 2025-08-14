@@ -2,13 +2,12 @@ use iced::widget::{button, center, checkbox, column, scrollable, slider, text, v
 use iced::{Center, Element, Fill, Subscription, Task};
 use std::time::Instant;
 
-
 mod components;
-use components::noise_radio;
 use components::gallery_view::gallery_view;
+use components::noise_radio;
 
 mod types;
-use types::{CityCam, CameraFeed, Message, View};
+use types::{CameraFeed, CityCam, Message, View};
 
 pub fn run_gui() -> iced::Result {
     iced::application("citycam", CityCam::update, CityCam::view)
@@ -23,13 +22,13 @@ pub fn run_gui() -> iced::Result {
 impl CityCam {
     fn new() -> Self {
         let args = crate::cli::Args::default();
-        
+
         // load all available cameras
-        let cameras = crate::camera::get_embedded_cameras()
-            .unwrap_or_else(|_| Vec::new());
-        
+        let cameras = crate::camera::get_embedded_cameras().unwrap_or_else(|_| Vec::new());
+
         // initialize camera feeds
-        let camera_feeds = cameras.iter()
+        let camera_feeds = cameras
+            .iter()
             .map(|camera| CameraFeed {
                 camera: camera.clone(),
                 last_image: None,
@@ -46,11 +45,23 @@ impl CityCam {
             current_view: View::Config,
             camera_feeds,
             window_size: iced::Size::new(1200.0, 800.0), // Default size
+            auto_refresh_interval: 10,                   // Default 10 seconds
+            auto_refresh_enabled: false,
         }
     }
-    
+
     fn subscription(&self) -> Subscription<Message> {
-        iced::window::resize_events().map(|(_, size)| Message::WindowResized(size))
+        let window_sub =
+            iced::window::resize_events().map(|(_, size)| Message::WindowResized(size));
+
+        if self.auto_refresh_enabled {
+            let timer_sub =
+                iced::time::every(std::time::Duration::from_secs(self.auto_refresh_interval))
+                    .map(|_| Message::AutoRefreshTick);
+            Subscription::batch([window_sub, timer_sub])
+        } else {
+            window_sub
+        }
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
@@ -75,9 +86,7 @@ impl CityCam {
                     Some(noise_type) => {
                         self.message = format!("Noise type set to: {:?}", noise_type);
                     }
-                    None => {
-                        self.message = "No noise will be applied".to_string()
-                    }
+                    None => self.message = "No noise will be applied".to_string(),
                 }
                 Task::none()
             }
@@ -126,14 +135,13 @@ impl CityCam {
                 self.current_view = View::Config;
                 Task::none()
             }
-            Message::RefreshFeeds => {
-                self.refresh_feeds()
-            }
+            Message::RefreshFeeds => self.refresh_feeds(),
             Message::ImageLoaded(index, result) => {
                 if let Some(feed) = self.camera_feeds.get_mut(index) {
                     match result {
                         Ok(image_data) => {
-                            feed.last_image = Some(iced::widget::image::Handle::from_bytes(image_data));
+                            feed.last_image =
+                                Some(iced::widget::image::Handle::from_bytes(image_data));
                             feed.error = None;
                         }
                         Err(error) => {
@@ -149,16 +157,31 @@ impl CityCam {
                 self.window_size = size;
                 Task::none()
             }
+            Message::AutoRefreshToggled(enabled) => {
+                self.auto_refresh_enabled = enabled;
+                Task::none()
+            }
+            Message::AutoRefreshIntervalChanged(interval) => {
+                self.auto_refresh_interval = interval as u64;
+                Task::none()
+            }
+            Message::AutoRefreshTick => {
+                if self.auto_refresh_enabled {
+                    self.refresh_feeds()
+                } else {
+                    Task::none()
+                }
+            }
         }
     }
 
     fn view(&self) -> Element<Message> {
         match self.current_view {
             View::Config => self.config_view(),
-            View::Gallery => gallery_view(&self.camera_feeds, self.window_size),
+            View::Gallery => gallery_view(self),
         }
     }
-    
+
     fn config_view(&self) -> Element<Message> {
         let content = column![
             button("View Camera Gallery").on_press(Message::SwitchToGallery),
@@ -179,42 +202,47 @@ impl CityCam {
 
         center(scrollable(content)).into()
     }
-    
+
     fn refresh_feeds(&mut self) -> Task<Message> {
-        // Create tasks to fetch each camera feed
-        let mut tasks = Vec::new();
-        
-        // Mark all feeds as loading
+        // Clear errors but keep existing images until replaced
         for feed in &mut self.camera_feeds {
             feed.error = None;
-            feed.last_image = None;
+            // Don't clear last_image - keep it until we get a new one
         }
-        
+
+        // Create individual tasks that can complete independently
+        let mut tasks = Vec::new();
+
         for (index, feed) in self.camera_feeds.iter().enumerate() {
             let camera = feed.camera.clone();
-            
+
             let task = Task::perform(
                 async move {
-                    // Use blocking version with its own tokio runtime
-                    match crate::stream::get_first_frame_blocking(&camera) {
+                    // Use async version directly since we're already in an async context
+                    match crate::stream::get_first_frame(&camera).await {
                         Ok(image) => {
-                            // Convert DynamicImage to bytes
                             let mut buffer = Vec::new();
-                            if image.write_to(&mut std::io::Cursor::new(&mut buffer), image::ImageFormat::Png).is_ok() {
+                            if image
+                                .write_to(
+                                    &mut std::io::Cursor::new(&mut buffer),
+                                    image::ImageFormat::Png,
+                                )
+                                .is_ok()
+                            {
                                 (index, Ok(buffer))
                             } else {
                                 (index, Err("Failed to encode image".to_string()))
                             }
                         }
-                        Err(e) => (index, Err(e.to_string()))
+                        Err(e) => (index, Err(e.to_string())),
                     }
                 },
-                |(index, result)| Message::ImageLoaded(index, result)
+                |(index, result)| Message::ImageLoaded(index, result),
             );
-            
+
             tasks.push(task);
         }
-        
+
         Task::batch(tasks)
     }
 }

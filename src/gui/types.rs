@@ -9,6 +9,8 @@ pub struct CityCam {
     pub current_view: View,
     pub camera_feeds: Vec<CameraFeed>,
     pub window_size: iced::Size,
+    pub auto_refresh_interval: u64, // seconds
+    pub auto_refresh_enabled: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -22,6 +24,9 @@ pub enum Message {
     RefreshFeeds,
     ImageLoaded(usize, Result<Vec<u8>, String>),
     WindowResized(iced::Size),
+    AutoRefreshToggled(bool),
+    AutoRefreshIntervalChanged(f64),
+    AutoRefreshTick,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum View {

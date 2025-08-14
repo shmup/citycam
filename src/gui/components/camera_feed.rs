@@ -12,14 +12,12 @@ pub fn camera_feed_view_with_size(feed: &CameraFeed, card_height: f32) -> Elemen
         container(
             Image::new(handle.clone())
                 .width(Length::Fill)
-                .height(Length::Fill)
+                .height(Length::Fill),
         )
-        .style(|theme: &Theme| {
-            container::Style {
-                background: Some(theme.palette().background.into()),
-                border: iced::Border::default().rounded(4.0),
-                ..Default::default()
-            }
+        .style(|theme: &Theme| container::Style {
+            background: Some(theme.palette().background.into()),
+            border: iced::Border::default().rounded(4.0),
+            ..Default::default()
         })
     } else if let Some(error) = &feed.error {
         // Simplify error message - extract key information
@@ -34,43 +32,31 @@ pub fn camera_feed_view_with_size(feed: &CameraFeed, card_height: f32) -> Elemen
         } else {
             "Loading failed"
         };
-        
+
         container(
             text(simplified_error)
                 .size(10)
-                .style(|theme: &Theme| {
-                    text::Style {
-                        color: Some(theme.palette().danger),
-                    }
-                })
+                .style(|theme: &Theme| text::Style {
+                    color: Some(theme.palette().danger),
+                }),
         )
         .center_x(Length::Fill)
         .center_y(Length::Fill)
-        .style(|theme: &Theme| {
-            container::Style {
-                background: Some(theme.palette().danger.scale_alpha(0.1).into()),
-                border: iced::Border::default().rounded(4.0),
-                ..Default::default()
-            }
+        .style(|theme: &Theme| container::Style {
+            background: Some(theme.palette().danger.scale_alpha(0.1).into()),
+            border: iced::Border::default().rounded(4.0),
+            ..Default::default()
         })
     } else {
-        container(
-            text("●")
-                .size(16)
-                .style(|theme: &Theme| {
-                    text::Style {
-                        color: Some(theme.palette().primary),
-                    }
-                })
-        )
+        container(text("●").size(16).style(|theme: &Theme| text::Style {
+            color: Some(theme.palette().primary),
+        }))
         .center_x(Length::Fill)
         .center_y(Length::Fill)
-        .style(|theme: &Theme| {
-            container::Style {
-                background: Some(theme.palette().background.scale_alpha(0.7).into()),
-                border: iced::Border::default().rounded(4.0),
-                ..Default::default()
-            }
+        .style(|theme: &Theme| container::Style {
+            background: Some(theme.palette().background.scale_alpha(0.7).into()),
+            border: iced::Border::default().rounded(4.0),
+            ..Default::default()
         })
     };
 
@@ -80,44 +66,38 @@ pub fn camera_feed_view_with_size(feed: &CameraFeed, card_height: f32) -> Elemen
         .push(
             container(feed_content)
                 .width(Length::Fill)
-                .height(Length::Fixed(card_height - 30.0)) // Reserve space for label
+                .height(Length::Fixed(card_height - 30.0)), // Reserve space for label
         )
         .push(
             container(
                 text(&feed.camera.name)
                     .size(10)
-                    .style(|theme: &Theme| {
-                        text::Style {
-                            color: Some(theme.palette().text),
-                        }
-                    })
+                    .style(|theme: &Theme| text::Style {
+                        color: Some(theme.palette().text),
+                    }),
             )
             .width(Length::Fill)
             .center_x(Length::Fill)
             .padding([4, 6])
-            .style(|theme: &Theme| {
-                container::Style {
-                    background: Some(theme.palette().background.scale_alpha(0.8).into()),
-                    border: iced::Border::default().rounded(4.0),
-                    ..Default::default()
-                }
-            })
+            .style(|theme: &Theme| container::Style {
+                background: Some(theme.palette().background.scale_alpha(0.8).into()),
+                border: iced::Border::default().rounded(4.0),
+                ..Default::default()
+            }),
         );
 
     container(card_content)
         .width(Length::Fill)
         .padding(4)
-        .style(|theme: &Theme| {
-            container::Style {
-                background: Some(theme.palette().background.scale_alpha(0.9).into()),
-                border: iced::Border::default().rounded(6.0),
-                shadow: iced::Shadow {
-                    color: theme.palette().background.scale_alpha(0.3),
-                    offset: iced::Vector::new(0.0, 2.0),
-                    blur_radius: 4.0,
-                },
-                ..Default::default()
-            }
+        .style(|theme: &Theme| container::Style {
+            background: Some(theme.palette().background.scale_alpha(0.9).into()),
+            border: iced::Border::default().rounded(6.0),
+            shadow: iced::Shadow {
+                color: theme.palette().background.scale_alpha(0.3),
+                offset: iced::Vector::new(0.0, 2.0),
+                blur_radius: 4.0,
+            },
+            ..Default::default()
         })
         .into()
 }
